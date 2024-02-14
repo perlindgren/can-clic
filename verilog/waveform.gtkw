@@ -1,0 +1,23 @@
+[*]
+[*] GTKWave Analyzer v3.3.118 (w)1999-2023 BSI
+[*] Wed Feb 14 14:41:28 2024
+[*]
+[dumpfile] "/data/riscv/can-clic/verilog/waveform.vcd"
+[dumpfile_mtime] "Wed Feb 14 14:37:28 2024"
+[dumpfile_size] 837
+[savefile] "/data/riscv/can-clic/verilog/waveform.gtkw"
+[timestart] 0
+[size] 1000 600
+[pos] -1 -1
+*-1.689660 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[sst_width] 209
+[signals_width] 126
+[sst_expanded] 1
+[sst_vpaned_height] 157
+@28
+TOP.tb_can_clic.is_interrupt
+@29
+TOP.tb_can_clic.index[1:0]
+[pattern_trace] 1
+[pattern_trace] 0
