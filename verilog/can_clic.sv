@@ -1,47 +1,54 @@
-module can_clic #(
-    parameter PRIO_BITS  = 3,
-    parameter INDEX_BITS = 2
-) (
-    input logic [INDEX_BITS-1:0][PRIO_BITS-1:0] entries,
+`timescale 1ns / 1ps
+
+import common_pkg::*;
+
+module can_clic (
+    input Entries entries,
+
     output logic is_interrupt,
-    output logic [INDEX_BITS-1:0] index
+    output Index index
 );
-  logic [PRIO_BITS-1:0] p;
-  logic [INDEX_BITS-1:0][0:0] contender;
+  Entry e;
+  Index contender;
   logic or_value;
 
   always begin
-    for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-      p = entries[i];  // later enabled and pending
-      $display("i %3d prio %3b", i, p);
+    for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+      e = entries[i];  // later enabled and pending
+      $display("i=%2d, e=%3b", i, e);
       contender[i] = 1'b1;  // initially set true
     end
 
     // sanity check
-    for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-      $display("i %3d contender %0b", i, contender[i]);
+    for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+      $display("i=%2d contender %0b", i, contender[i]);
     end
 
+    $display("---- iterate over priority bits ----");
 
-    for (integer j = PRIO_BITS - 1; j >= 0; j--) begin
+    // iterate over priority bits
+    for (integer pb = NR_PRIO_BITS - 1; pb >= 0; pb--) begin
       or_value = 1'b0;
-      for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
 
-        p = entries[i];
+      $display("---- priority bit %2d: ored write ----", pb);
 
-        $display("j %3d, i %3d, p = %3b p[j] = %0b", j, i, p, p[j]);
+      // iterate over entries
+      for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+        e = entries[i];
+        $display("pb=%2d, i=%3d, e= %3b, e[pb] = %0b", pb, i, e, e[pb]);
 
-        if (contender[i] & p[j]) begin
-
+        // we write a 1
+        if (contender[i] & e[pb]) begin
           $display("or_value %0b, - write 1 -", or_value);
           or_value = 1'b1;
-
         end
       end
 
-      for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-        p = entries[i];
-        if (or_value & !p[j]) begin
+      // check if loose
+
+      for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+        e = entries[i];
+        if (or_value & !e[pb]) begin
           // it is ok to loose multiple times
           $display("i %d looses", i);
           contender[i] = 0;
@@ -49,40 +56,41 @@ module can_clic #(
       end
     end
 
-    // for (integer j = INDEX_BITS - 1; j >= 0; j--) begin
-    //   or_value = 1'b0;
-    //   for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-    //     $display("j %3d, i %3d, ii = %3b p[j] = %0b", j, i, p, p[j]);
+    //   // for (integer j = INDEX_BITS - 1; j >= 0; j--) begin
+    //   //   or_value = 1'b0;
+    //   //   for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
+    //   //     $display("j %3d, i %3d, ii = %3b p[j] = %0b", j, i, p, p[j]);
 
-    //     if (contender[i] & p[j]) begin
+    //   //     if (contender[i] & p[j]) begin
 
-    //       $display("or_value %0b, - write 1 -", or_value);
-    //       or_value = 1'b1;
+    //   //       $display("or_value %0b, - write 1 -", or_value);
+    //   //       or_value = 1'b1;
 
-    //     end
-    //   end
+    //   //     end
+    //   //   end
 
-    //   for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-    //     p = entries[i];
-    //     if (or_value & !p[j]) begin
-    //       // it is ok to loose multiple times
-    //       $display("i %d looses", i);
-    //       contender[i] = 0;
-    //     end
-    //   end
-    // end
+    //   //   for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
+    //   //     p = entries[i];
+    //   //     if (or_value & !p[j]) begin
+    //   //       // it is ok to loose multiple times
+    //   //       $display("i %d looses", i);
+    //   //       contender[i] = 0;
+    //   //     end
+    //   //   end
+    //   // end
 
     is_interrupt = 0;
     index = '{default: '0};
-    for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
+    for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
       if (contender[i]) begin
         assert (!is_interrupt)
         else $error("multiple winners");
         is_interrupt = 1'b1;
-        index = i[1:0];
+        index = i[2**NR_INDEX_BITS-1:0];
         $display("winner is i %d", i);
       end
     end
+
   end
 endmodule
 
