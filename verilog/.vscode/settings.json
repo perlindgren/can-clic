@@ -1,0 +1,10 @@
+{
+    "systemverilog.formatCommand": "verible-verilog-format",
+    "editor.formatOnSave": true,
+    "cSpell.ignoreWords": [
+        "CLIC",
+        "gtkwave",
+        "verilator",
+        "verilog"
+    ]
+}
