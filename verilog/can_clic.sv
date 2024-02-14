@@ -12,7 +12,10 @@ module can_clic (
   Index contender;
   logic or_value;
 
-  always begin
+  logic clic_interrupt;
+  Index clic_index;
+
+  always @entries begin
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
       e = entries[i];  // later enabled and pending
       $display("i=%2d, e=%3b", i, e);
@@ -79,17 +82,20 @@ module can_clic (
     //   //   end
     //   // end
 
-    is_interrupt = 0;
-    index = '{default: '0};
+    clic_interrupt = 0;
+    clic_index = '{default: '0};
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
       if (contender[i]) begin
-        assert (!is_interrupt)
+        assert (!clic_interrupt)
         else $error("multiple winners");
-        is_interrupt = 1'b1;
-        index = i[2**NR_INDEX_BITS-1:0];
+        clic_interrupt = 1'b1;
+        clic_index = i[2**NR_INDEX_BITS-1:0];
         $display("winner is i %d", i);
       end
     end
+
+    is_interrupt = clic_interrupt;
+    index = clic_index;
 
   end
 endmodule
