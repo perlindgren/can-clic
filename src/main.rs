@@ -1,35 +1,47 @@
 #[derive(Debug)]
 struct Entry {
-    prio: u8,
+    priority: u32,
     pend: bool,
     enable: bool,
 }
 
-const NR: usize = 8;
+fn get_entry(
+    threshold: u32,
+    current_priority: u32,
+    nr_prio_bit: u32,
+    entries: &Vec<Entry>,
+) -> Option<usize> {
+    let nr_index_bits = (entries.len() + 1).ilog2() as u32 + 1;
 
-fn get_entry<const N: usize>(nr_prio_bit: u8, entries: &[Entry; N]) -> usize {
-    let nr_index_bits = (NR as u8).ilog2() as u8;
+    println!(
+        "entries_len {}, nr_index_bits {}",
+        entries.len(),
+        nr_index_bits
+    );
 
-    let mut contenders = [(true, 0); N];
-    for i in 0..N {
-        contenders[i] = (
-            entries[i].pend & entries[i].enable,
-            (entries[i].prio << nr_index_bits) + i as u8,
-        )
-    }
+    let mut contenders: Vec<_> = entries
+        .iter()
+        .enumerate()
+        .map(|(i, e)| (e.enable & e.pend, i as u32 + (e.priority << nr_index_bits)))
+        .collect();
 
-    println!("{}", nr_index_bits);
-    println!("{:?}", contenders);
+    contenders.push((true, (threshold << nr_index_bits) + entries.len() as u32));
+    contenders.push((
+        true,
+        (current_priority << nr_index_bits) + entries.len() as u32 + 1,
+    ));
+
+    println!("Initial state \n{:?}\n\nArbitration started", contenders);
 
     for bit in (0..nr_index_bits + nr_prio_bit).rev() {
-        println!("bit {}", bit);
-        let weight: u8 = 1 << bit;
-        let mut or_value: u8 = 0;
+        let weight: u32 = 1 << bit;
+        let mut or_value: u32 = 0;
+        println!("bit {} weight {}", bit, weight);
 
         // compute the or among all contenders
-        for (contend, value) in contenders {
-            if contend {
-                or_value |= value & weight;
+        for (contend, value) in &contenders {
+            if *contend {
+                or_value |= *value & weight;
             }
         }
         // update surviving contenders
@@ -38,7 +50,7 @@ fn get_entry<const N: usize>(nr_prio_bit: u8, entries: &[Entry; N]) -> usize {
                 *contend = false
             }
         }
-        println!("contenders {:?}", contenders);
+        println!("{:?}", contenders);
     }
 
     let mut result = None;
@@ -50,63 +62,82 @@ fn get_entry<const N: usize>(nr_prio_bit: u8, entries: &[Entry; N]) -> usize {
             }
         }
     }
-    result.unwrap()
+
+    result = match result {
+        Some(i) => {
+            if i >= entries.len() {
+                None
+            } else {
+                result
+            }
+        }
+        None => result,
+    };
+
+    println!(
+        "threshold {} current_priority {}, i is the winner {:?}",
+        threshold, current_priority, result,
+    );
+    result
 }
 
 fn main() {
-    let entries = [
-        // 0
+    let entries = vec![
+        // 000
         Entry {
-            prio: 0b100,
+            priority: 0b100,
             pend: true,
             enable: false,
         },
-        // 1
+        // 001
         Entry {
-            prio: 0b001,
+            priority: 0b001,
             pend: true,
             enable: true,
         },
-        // 2
+        // 010
         Entry {
-            prio: 0b100,
+            priority: 0b100,
             pend: true,
             enable: true,
         },
-        // 3
+        // 011
         Entry {
-            prio: 0b111,
+            priority: 0b111,
             pend: false,
             enable: false,
         },
-        // 4
+        // 100
         Entry {
-            prio: 0b010,
+            priority: 0b010,
             pend: true,
             enable: true,
         },
-        // 5
+        // 101
         Entry {
-            prio: 0b101,
+            priority: 0b101,
             pend: true,
             enable: true,
         },
-        // 6
+        // 110
         Entry {
-            prio: 0b001,
+            priority: 0b001,
             pend: false,
             enable: true,
         },
-        // 7
+        // 111
         Entry {
-            prio: 0b101,
+            priority: 0b101,
             pend: true,
             enable: true,
         },
     ];
 
-    let i = get_entry(3, &entries);
-    println!("i is the winner {}", i);
+    let _i = get_entry(0, 0, 3, &entries);
+    let _i = get_entry(4, 0, 3, &entries);
+    let _i = get_entry(0, 4, 3, &entries);
+    let _i = get_entry(5, 4, 3, &entries);
+    let _i = get_entry(5, 5, 3, &entries);
 }
 
 #[cfg(test)]
@@ -115,117 +146,109 @@ mod test {
 
     #[test]
     fn test5a() {
-        let entries = [
+        let entries = vec![
             // 0
             Entry {
-                prio: 0b100,
+                priority: 0b100,
                 pend: true,
                 enable: false,
             },
             // 1
             Entry {
-                prio: 0b001,
+                priority: 0b001,
                 pend: true,
                 enable: true,
             },
             // 2
             Entry {
-                prio: 0b100,
+                priority: 0b100,
                 pend: true,
                 enable: true,
             },
             // 3
             Entry {
-                prio: 0b111,
+                priority: 0b111,
                 pend: false,
                 enable: false,
             },
             // 4
             Entry {
-                prio: 0b010,
+                priority: 0b010,
                 pend: true,
                 enable: true,
             },
             // 5, single highest prio
             Entry {
-                prio: 0b101,
+                priority: 0b101,
                 pend: true,
                 enable: true,
             },
             // 6
             Entry {
-                prio: 0b001,
+                priority: 0b001,
                 pend: false,
                 enable: true,
             },
             // 7
             Entry {
-                prio: 0b100,
+                priority: 0b100,
                 pend: true,
                 enable: true,
             },
         ];
 
-        let i = get_entry(3, &entries);
-        println!("i is the winner {}", i);
-        assert_eq!(i, 5);
+        let i = get_entry(0, 0, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, Some(5));
+
+        let i = get_entry(4, 0, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, Some(5));
+        let i = get_entry(0, 4, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, Some(5));
+        let i = get_entry(4, 4, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, Some(5));
+        let i = get_entry(4, 5, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, None);
     }
 
     #[test]
-    fn test5b() {
-        let entries = [
+    fn test5c() {
+        let entries = vec![
             // 0
             Entry {
-                prio: 0b100,
+                priority: 0b100,
                 pend: true,
                 enable: false,
             },
             // 1
             Entry {
-                prio: 0b001,
+                priority: 0b101,
                 pend: true,
                 enable: true,
             },
             // 2
             Entry {
-                prio: 0b101, // tie with 5
+                priority: 0b101, // win over 1
                 pend: true,
                 enable: true,
             },
             // 3
             Entry {
-                prio: 0b111,
+                priority: 0b111,
                 pend: false,
                 enable: false,
             },
-            // 4
-            Entry {
-                prio: 0b101, // tie with 5
-                pend: true,
-                enable: true,
-            },
-            // 5
-            Entry {
-                prio: 0b101, // 5 wins
-                pend: true,
-                enable: true,
-            },
-            // 6
-            Entry {
-                prio: 0b001,
-                pend: false,
-                enable: true,
-            },
-            // 7
-            Entry {
-                prio: 0b100,
-                pend: true,
-                enable: true,
-            },
         ];
 
-        let i = get_entry(3, &entries);
-        println!("i is the winner {}", i);
-        assert_eq!(i, 5);
+        let i = get_entry(0, 0, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, Some(2));
+        let i = get_entry(5, 0, 3, &entries);
+        println!("i is the winner {:?}", i);
+        assert_eq!(i, None);
     }
 }
