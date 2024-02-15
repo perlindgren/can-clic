@@ -45,7 +45,6 @@ module can_clic (
       end
 
       // check if loose
-
       for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
         e = entries[i];
         if (or_value & !e[pb]) begin
@@ -56,28 +55,28 @@ module can_clic (
       end
     end
 
-    //   // for (integer j = INDEX_BITS - 1; j >= 0; j--) begin
-    //   //   or_value = 1'b0;
-    //   //   for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-    //   //     $display("j %3d, i %3d, ii = %3b p[j] = %0b", j, i, p, p[j]);
+    $display("resolve ties");
+    // now the same for resolving ties
+    for (integer pb = NR_INDEX_BITS - 1; pb >= 0; pb--) begin
+      or_value = 1'b0;
+      for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+        $display("pb %3d, i %3d, i[pb] = %0b", pb, i, i[pb]);
 
-    //   //     if (contender[i] & p[j]) begin
+        if (contender[i] & i[pb]) begin
+          $display("or_value %0b, - write 1 -", or_value);
+          or_value = 1'b1;
 
-    //   //       $display("or_value %0b, - write 1 -", or_value);
-    //   //       or_value = 1'b1;
-
-    //   //     end
-    //   //   end
-
-    //   //   for (integer i = 0; i < 2 ** (INDEX_BITS - 1); i++) begin
-    //   //     p = entries[i];
-    //   //     if (or_value & !p[j]) begin
-    //   //       // it is ok to loose multiple times
-    //   //       $display("i %d looses", i);
-    //   //       contender[i] = 0;
-    //   //     end
-    //   //   end
-    //   // end
+        end
+      end
+      $display("check loosers");
+      for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+        if (or_value & !i[pb]) begin
+          // it is ok to loose multiple times
+          $display("i %d looses", i);
+          contender[i] = 0;
+        end
+      end
+    end
 
     is_interrupt = 0;
     index = '{default: '0};
