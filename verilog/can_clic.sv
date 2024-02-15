@@ -9,19 +9,19 @@ module can_clic (
     output Index index
 );
   Entry e;
-  Index contender;
+  logic contenders[2**NR_INDEX_BITS-1:0];
   logic or_value;
 
   always @entries begin
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
       e = entries[i];  // later enabled and pending
       $display("i=%2d, e=%3b", i, e);
-      contender[i] = 1'b1;  // initially set true
+      contenders[i] = 1'b1;  // initially set true
     end
 
     // sanity check
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
-      $display("i=%2d contender %0b", i, contender[i]);
+      $display("i=%2d contenders %0b", i, contenders[i]);
     end
 
     $display("---- iterate over priority bits ----");
@@ -38,7 +38,7 @@ module can_clic (
         $display("pb=%2d, i=%3d, e= %3b, e[pb] = %0b", pb, i, e, e[pb]);
 
         // we write a 1
-        if (contender[i] & e[pb]) begin
+        if (contenders[i] & e[pb]) begin
           $display("or_value %0b, - write 1 -", or_value);
           or_value = 1'b1;
         end
@@ -50,7 +50,7 @@ module can_clic (
         if (or_value & !e[pb]) begin
           // it is ok to loose multiple times
           $display("i %d looses", i);
-          contender[i] = 0;
+          contenders[i] = 0;
         end
       end
     end
@@ -59,10 +59,12 @@ module can_clic (
     // now the same for resolving ties
     for (integer pb = NR_INDEX_BITS - 1; pb >= 0; pb--) begin
       or_value = 1'b0;
+      $display("---- priority bit %2d: ored write ----", pb);
       for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
         $display("pb %3d, i %3d, i[pb] = %0b", pb, i, i[pb]);
+        $display("contenders[%d]=%d", i, contenders[i]);
 
-        if (contender[i] & i[pb]) begin
+        if (contenders[i] & i[pb]) begin
           $display("or_value %0b, - write 1 -", or_value);
           or_value = 1'b1;
 
@@ -70,10 +72,11 @@ module can_clic (
       end
       $display("check loosers");
       for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+        $display("contenders[%d]=%d", i, contenders[i]);
         if (or_value & !i[pb]) begin
           // it is ok to loose multiple times
           $display("i %d looses", i);
-          contender[i] = 0;
+          contenders[i] = 0;
         end
       end
     end
@@ -82,12 +85,12 @@ module can_clic (
     is_interrupt = 0;
     index = '{default: '0};
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
-      $display("contender[i]=%d", contender[i]);
-      if (contender[i]) begin
+      $display("contenders[%d]=%d", i, contenders[i]);
+      if (contenders[i]) begin
         assert (!is_interrupt)
         else $error("multiple winners");
         is_interrupt = 1'b1;
-        index = i[2**NR_INDEX_BITS-1:0];
+        index = i[NR_INDEX_BITS-1:0];
         $display("winner is i %d", i);
       end
     end

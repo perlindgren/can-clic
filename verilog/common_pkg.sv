@@ -7,5 +7,5 @@ package common_pkg;
 
   typedef logic [NR_PRIO_BITS-1:0] Entries[2**NR_INDEX_BITS-1:0];
   typedef logic [NR_PRIO_BITS-1:0] Entry;
-  typedef logic [2**NR_INDEX_BITS-1:0] Index;
+  typedef logic [NR_INDEX_BITS-1:0] Index;
 endpackage
