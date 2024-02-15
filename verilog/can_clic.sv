@@ -78,9 +78,11 @@ module can_clic (
       end
     end
 
+    $display("check winner");
     is_interrupt = 0;
     index = '{default: '0};
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
+      $display("contender[i]=%d", contender[i]);
       if (contender[i]) begin
         assert (!is_interrupt)
         else $error("multiple winners");
@@ -89,6 +91,9 @@ module can_clic (
         $display("winner is i %d", i);
       end
     end
+
+    // clear is_interrupt if index == threshold
+    is_interrupt &= !(index[NR_INDEX_BITS-1:0] == '1);
   end
 endmodule
 
