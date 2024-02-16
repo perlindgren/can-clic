@@ -3,20 +3,22 @@
 import common_pkg::*;
 
 module can_clic (
-    input Entries entries,
+    input PrioEntries entries,
+    input BitEntries  enable,
+    input BitEntries  pend,
 
     output logic is_interrupt,
     output Index index
 );
-  Entry e;
-  logic contenders[2**NR_INDEX_BITS-1:0];
+  Prio e;
+  BitEntries contenders;
   logic or_value;
 
   always @entries begin
     for (integer i = 0; i < 2 ** NR_INDEX_BITS; i++) begin
       e = entries[i];  // later enabled and pending
       $display("i=%2d, e=%3b", i, e);
-      contenders[i] = 1'b1;  // initially set true
+      contenders[i] = pend[i] & enable[i];
     end
 
     // sanity check

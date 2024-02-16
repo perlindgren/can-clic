@@ -19,7 +19,8 @@ package common_pkg;
   // parameter NR_PRIO_BITS = 8;
   // parameter NR_INDEX_BITS = 8;
 
-  typedef logic [NR_PRIO_BITS-1:0] Entries[2**NR_INDEX_BITS-1:0];
-  typedef logic [NR_PRIO_BITS-1:0] Entry;
+  typedef logic [NR_PRIO_BITS-1:0] PrioEntries[2**NR_INDEX_BITS-1:0];
+  typedef logic BitEntries[2**NR_INDEX_BITS-1:0];
+  typedef logic [NR_PRIO_BITS-1:0] Prio;
   typedef logic [NR_INDEX_BITS-1:0] Index;
 endpackage
