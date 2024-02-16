@@ -4,12 +4,12 @@ package common_pkg;
 
 
   // For testing
-  parameter NR_PRIO_BITS = 3;
-  parameter NR_INDEX_BITS = 2;
+  // parameter NR_PRIO_BITS = 3;
+  // parameter NR_INDEX_BITS = 2;
 
   // // Sweet spot, 8 priorities, 64 vectors
-  // parameter NR_PRIO_BITS = 3;
-  // parameter NR_INDEX_BITS = 6;
+  parameter NR_PRIO_BITS = 3;
+  parameter NR_INDEX_BITS = 6;
 
   // 256 priorities, 64 vectors
   // parameter NR_PRIO_BITS = 8;
