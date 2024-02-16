@@ -19,30 +19,35 @@ module tb_can_clic;
     $dumpvars;
 
     // highest entry (leftmost), represent the threshold
-    entries = {{2'b01}, {2'b00}, {2'b00}, {2'b01}, {2'b01}, {2'b00}, {2'b00}, {2'b01}};
+    // all at prio zero
+    entries = {{3'b000}, {3'b000}, {3'b000}, {3'b000}};
     #10 $display("(0), is_interrupt %d, index %d", is_interrupt, index);
-    assert (is_interrupt == 0 && index == 7) $display("filtered by threshold");
+    assert (is_interrupt == 0 && index == 3) $display("filtered by threshold");
     else $error("should be filtered by threshold");
 
-    entries = {{2'b00}, {2'b00}, {2'b00}, {2'b01}, {2'b01}, {2'b00}, {2'b00}, {2'b01}};
+    // threshold at 2, highest prio interrupt at 0, should be filetered by threshold
+    entries = {{3'b010}, {3'b001}, {3'b000}, {3'b010}};
     #10 $display("(0), is_interrupt %d, index %d", is_interrupt, index);
-    assert (is_interrupt == 1 && index == 4) $display("ok");
+    assert (is_interrupt == 0 && index == 3) $display("filtered by threshold");
     else $error("should be filtered by threshold");
 
-    // entries = {{3'b000}, {3'b011}, {3'b010}, {3'b001}};
-    // #10 $display("(1), is_interrupt %d, index %d", is_interrupt, index);
-    // assert (is_interrupt == 1 && index == 2) $display("ok");
-    // else $error("should interrupt");
+    // threshold at 2, highest prio interrupt at 5
+    entries = {{3'b010}, {3'b101}, {3'b011}, {3'b010}};
+    #10 $display("(0), is_interrupt %d, index %d", is_interrupt, index);
+    assert (is_interrupt == 1 && index == 2) $display("ok");
+    else $error("should be filtered by threshold");
 
-    // entries = {{3'b011}, {3'b101}, {3'b010}, {3'b110}};
-    // #10 $display("(1), is_interrupt %d, index %d", is_interrupt, index);
-    // assert (is_interrupt == 1 && index == 0) $display("ok");
-    // else $error("should interrupt");
+    // threshold at 2, highest prio interrupt at 4
+    entries = {{3'b010}, {3'b001}, {3'b100}, {3'b010}};
+    #10 $display("(0), is_interrupt %d, index %d", is_interrupt, index);
+    assert (is_interrupt == 1 && index == 1) $display("ok");
+    else $error("should be filtered by threshold");
 
-    // entries = {{3'b011}, {3'b101}, {3'b110}, {3'b100}};
-    // #10 $display("(1), is_interrupt %d, index %d", is_interrupt, index);
-    // assert (is_interrupt == 1 && index == 1) $display("ok");
-    // else $error("should interrupt");
+    // threshold at 2, highest prio interrupt at 3
+    entries = {{3'b010}, {3'b001}, {3'b010}, {3'b011}};
+    #10 $display("(0), is_interrupt %d, index %d", is_interrupt, index);
+    assert (is_interrupt == 1 && index == 0) $display("ok");
+    else $error("should be filtered by threshold");
 
   end
 
